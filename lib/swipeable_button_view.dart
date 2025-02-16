@@ -36,18 +36,18 @@ class SwipeableButtonView extends StatefulWidget {
   final Animation<Color?>? indicatorColor;
   const SwipeableButtonView(
       {Key? key,
-      required this.onFinish,
-      required this.onWaitingProcess,
-      required this.activeColor,
-      required this.buttonWidget,
-      required this.buttonText,
-      this.isFinished = false,
-      this.isActive = true,
-      this.disableColor = Colors.grey,
-      this.buttonColor = Colors.white,
-      this.buttontextstyle =
-          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      this.indicatorColor = const AlwaysStoppedAnimation<Color>(Colors.white)})
+        required this.onFinish,
+        required this.onWaitingProcess,
+        required this.activeColor,
+        required this.buttonWidget,
+        required this.buttonText,
+        this.isFinished = false,
+        this.isActive = true,
+        this.disableColor = Colors.grey,
+        this.buttonColor = Colors.blue,
+        this.buttontextstyle =
+        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        this.indicatorColor = const AlwaysStoppedAnimation<Color>(Colors.white)})
       : super(key: key);
 
   @override
@@ -91,33 +91,33 @@ class _SwipeableButtonViewState extends State<SwipeableButtonView>
     rippleController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 600));
     scaleController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 800))
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              setState(() {
-                isFinishValue = true;
-              });
-              widget.onFinish();
-            }
+    AnimationController(vsync: this, duration: Duration(milliseconds: 800))
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          setState(() {
+            isFinishValue = true;
           });
+          widget.onFinish();
+        }
+      });
     rippleAnimation =
-        Tween<double>(begin: 60.0, end: 90.0).animate(rippleController)
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              rippleController.reverse();
-            } else if (status == AnimationStatus.dismissed) {
-              rippleController.forward();
-            }
-          });
+    Tween<double>(begin: 60.0, end: 90.0).animate(rippleController)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          rippleController.reverse();
+        } else if (status == AnimationStatus.dismissed) {
+          rippleController.forward();
+        }
+      });
     scaleAnimation =
-        Tween<double>(begin: 1.0, end: 30.0).animate(scaleController)
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              setState(() {
-                isScaleFinished = true;
-              });
-            }
+    Tween<double>(begin: 1.0, end: 30.0).animate(scaleController)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          setState(() {
+            isScaleFinished = true;
           });
+        }
+      });
 
     //rippleController.forward();
 
@@ -156,12 +156,12 @@ class _SwipeableButtonViewState extends State<SwipeableButtonView>
     return Container(
       width: isAccepted
           ? (MediaQuery.of(context).size.width -
-              ((MediaQuery.of(context).size.width - 60) * _controller.value))
+          ((MediaQuery.of(context).size.width - 60) * _controller.value))
           : double.infinity,
       height: 60,
       decoration: BoxDecoration(
           color: widget.isActive ? widget.activeColor : widget.disableColor,
-          borderRadius: BorderRadius.circular(30)),
+          borderRadius: BorderRadius.circular(12)),
       child: Stack(
         children: [
           Align(
@@ -176,83 +176,91 @@ class _SwipeableButtonViewState extends State<SwipeableButtonView>
           ),
           !isAccepted
               ? SwipeableWidget(
-                  isActive: widget.isActive,
-                  height: 60.0,
-                  onSwipeValueCallback: (value) {
-                    setState(() {
-                      opacity = value;
-                    });
-                  },
-                  child: Container(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Material(
-                            elevation: 2,
-                            shape: CircleBorder(),
-                            child: Container(
-                              width: 56,
-                              height: 56,
-                              child: Center(
-                                child: widget.buttonWidget,
-                              ),
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: widget.buttonColor),
-                            ),
+            isActive: widget.isActive,
+            height: 60.0,
+            onSwipeValueCallback: (value) {
+              setState(() {
+                opacity = value;
+              });
+            },
+            child: Container(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Transform.translate(
+                      offset: Offset(-8, 0), // Moves thumb 8 pixels back (adjust as needed)
+                      child: Material(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12), // Keep original shape
+                        ),
+                        child: Container(
+                          width: 60, // Keep original width
+                          height: 60, // Keep original height
+                          decoration: BoxDecoration(
+                            color: widget.buttonColor,
+                            borderRadius: BorderRadius.circular(12), // Keep original shape
                           ),
-                        ],
+                          child: Center(
+                            child: widget.buttonWidget,
+                          ),
+                        ),
+                      ),
+                    )
+
+
+                  ],
+                ),
+              ),
+              height: 60.0,
+            ),
+            onSwipeCallback: () {
+              widget.onWaitingProcess();
+              setState(() {
+                isAccepted = true;
+              });
+              _controller.animateTo(1.0,
+                  duration: Duration(milliseconds: 600),
+                  curve: Curves.fastOutSlowIn);
+            },
+          )
+              : AnimatedBuilder(
+            animation: rippleAnimation,
+            builder: (context, child) => Container(
+              width: rippleAnimation.value,
+              height: rippleAnimation.value,
+              child: AnimatedBuilder(
+                  animation: scaleAnimation,
+                  builder: (context, child) => Transform.scale(
+                    scale: scaleAnimation.value,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        color: widget.activeColor.withOpacity(0.4),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(4.0),
+                        child: Container(
+                            child: Center(
+                              child: !isFinishValue
+                                  ? CircularProgressIndicator(
+                                  valueColor:
+                                  widget.indicatorColor)
+                                  : SizedBox(),
+                            ),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.rectangle,
+                                color: widget.isActive
+                                    ? widget.activeColor
+                                    : widget.disableColor)),
                       ),
                     ),
-                    height: 60.0,
-                  ),
-                  onSwipeCallback: () {
-                    widget.onWaitingProcess();
-                    setState(() {
-                      isAccepted = true;
-                    });
-                    _controller.animateTo(1.0,
-                        duration: Duration(milliseconds: 600),
-                        curve: Curves.fastOutSlowIn);
-                  },
-                )
-              : AnimatedBuilder(
-                  animation: rippleAnimation,
-                  builder: (context, child) => Container(
-                    width: rippleAnimation.value,
-                    height: rippleAnimation.value,
-                    child: AnimatedBuilder(
-                        animation: scaleAnimation,
-                        builder: (context, child) => Transform.scale(
-                              scale: scaleAnimation.value,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: widget.activeColor.withOpacity(0.4),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(4.0),
-                                  child: Container(
-                                      child: Center(
-                                        child: !isFinishValue
-                                            ? CircularProgressIndicator(
-                                                valueColor:
-                                                    widget.indicatorColor)
-                                            : SizedBox(),
-                                      ),
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: widget.isActive
-                                              ? widget.activeColor
-                                              : widget.disableColor)),
-                                ),
-                              ),
-                            )),
-                  ),
-                )
+                  )),
+            ),
+          )
         ],
       ),
     );
